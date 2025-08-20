@@ -19,48 +19,13 @@ const bookingRoutes = require('./routes/bookingRoutes');
 
 // Middleware
 // CORS configuration with allowlist for local and production frontends
-const envList = (process.env.CORS_ORIGINS || '')
-    .split(',')
-    .map(s => s.trim())
-    .filter(Boolean);
-
-const allowedOrigins = [
-    ...envList,
-    process.env.FRONTEND_URL,
-    process.env.FRONTEND_URL_2,
-    'http://localhost:5173',
-    'https://gigs-lk.vercel.app',
-    'https://gigs-lk-git-giglk-main-yasassris-projects.vercel.app'
-].filter(Boolean);
-
-// Allow Vercel preview deployments for this project pattern
-const allowedOriginPatterns = [
-    /^https:\/\/gigs-lk.*\.vercel\.app$/
-];
-
-const corsOptions = {
-    origin: (origin, callback) => {
-        // Allow non-browser requests or same-origin (no origin header)
-        if (!origin) return callback(null, true);
-        if (allowedOrigins.includes(origin)) return callback(null, true);
-        if (allowedOriginPatterns.some(rx => rx.test(origin))) return callback(null, true);
-        return callback(null, false);
-    },
+// Simple CORS configuration - allow all origins
+app.use(cors({
+    origin: true, // Allow all origins
     credentials: true,
     methods: ['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Origin', 'Accept', 'Content-Type', 'Authorization', 'x-auth-token', 'X-Requested-With'],
-    preflightContinue: false,
-    optionsSuccessStatus: 204
-};
-
-app.use(cors(corsOptions));
-// Explicitly handle preflight across all routes
-app.options('*', cors(corsOptions));
-// Ensure credentials header is present when needed
-app.use((req, res, next) => {
-    res.header('Access-Control-Allow-Credentials', 'true');
-    next();
-});
+    allowedHeaders: ['Origin', 'Accept', 'Content-Type', 'Authorization', 'x-auth-token', 'X-Requested-With']
+}));
 app.use(express.json()); // To parse JSON request bodies
 
 // Serve static files from the 'uploads' directory

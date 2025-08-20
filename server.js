@@ -19,7 +19,13 @@ const bookingRoutes = require('./routes/bookingRoutes');
 
 // Middleware
 // CORS configuration with allowlist for local and production frontends
+const envList = (process.env.CORS_ORIGINS || '')
+    .split(',')
+    .map(s => s.trim())
+    .filter(Boolean);
+
 const allowedOrigins = [
+    ...envList,
     process.env.FRONTEND_URL,
     process.env.FRONTEND_URL_2,
     'http://localhost:5173',
@@ -27,12 +33,18 @@ const allowedOrigins = [
     'https://gigs-lk-git-giglk-main-yasassris-projects.vercel.app'
 ].filter(Boolean);
 
+// Allow Vercel preview deployments for this project pattern
+const allowedOriginPatterns = [
+    /^https:\/\/gigs-lk.*\.vercel\.app$/
+];
+
 const corsOptions = {
     origin: (origin, callback) => {
         // Allow non-browser requests or same-origin (no origin header)
         if (!origin) return callback(null, true);
         if (allowedOrigins.includes(origin)) return callback(null, true);
-        return callback(new Error('Not allowed by CORS'));
+        if (allowedOriginPatterns.some(rx => rx.test(origin))) return callback(null, true);
+        return callback(null, false);
     },
     credentials: true,
     methods: ['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE', 'OPTIONS'],

@@ -18,11 +18,37 @@ const chatRoutes = require('./routes/chatRoutes');
 const bookingRoutes = require('./routes/bookingRoutes');
 
 // Middleware
-// Use the cors middleware to allow requests from your frontend
-app.use(cors({
-    origin: 'http://localhost:5173', // Update this to your frontend's port
-    credentials: true, // This is important for cookies, if you use them
-}));
+// CORS configuration with allowlist for local and production frontends
+const allowedOrigins = [
+    process.env.FRONTEND_URL,
+    process.env.FRONTEND_URL_2,
+    'http://localhost:5173',
+    'https://gigs-lk.vercel.app',
+    'https://gigs-lk-git-giglk-main-yasassris-projects.vercel.app'
+].filter(Boolean);
+
+const corsOptions = {
+    origin: (origin, callback) => {
+        // Allow non-browser requests or same-origin (no origin header)
+        if (!origin) return callback(null, true);
+        if (allowedOrigins.includes(origin)) return callback(null, true);
+        return callback(new Error('Not allowed by CORS'));
+    },
+    credentials: true,
+    methods: ['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Origin', 'Accept', 'Content-Type', 'Authorization', 'x-auth-token', 'X-Requested-With'],
+    preflightContinue: false,
+    optionsSuccessStatus: 204
+};
+
+app.use(cors(corsOptions));
+// Explicitly handle preflight across all routes
+app.options('*', cors(corsOptions));
+// Ensure credentials header is present when needed
+app.use((req, res, next) => {
+    res.header('Access-Control-Allow-Credentials', 'true');
+    next();
+});
 app.use(express.json()); // To parse JSON request bodies
 
 // Serve static files from the 'uploads' directory
